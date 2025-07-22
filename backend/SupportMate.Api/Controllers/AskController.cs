@@ -1,20 +1,39 @@
 using Microsoft.AspNetCore.Mvc;
-using Models;
+using SupportMate.Api.Services;
 
-namespace Controllers;
-
-[ApiController]
-[Route("ask")]
-public class AskController : ControllerBase
+namespace SupportMate.Api.Controllers
 {
-    [HttpPost]
-    public IActionResult Ask([FromBody] AskRequest request)
+    [ApiController]
+    [Route("ask")]
+    public class AskController : ControllerBase
     {
-        var response = new AskResponse
-        {
-            Answer = $"You asked: {request.Question} - I will answer you in a moment"
-        };
+        private readonly IOpenAIService _openAIService;
 
-        return Ok(response);
+        public AskController(IOpenAIService openAIService)
+        {
+            _openAIService = openAIService;
+        }
+
+        public class AskRequest
+        {
+            public string? Question { get; set; }
+        }
+
+        public class AskResponse
+        {
+            public string? Answer { get; set; }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Ask([FromBody] AskRequest request)
+        {
+            var answer = await _openAIService.AskOpenAIAsync(request.Question);
+            var response = new AskResponse
+            {
+                Answer = answer
+            };
+
+            return Ok(response);
+        }
     }
 }
